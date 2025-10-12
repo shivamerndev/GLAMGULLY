@@ -22,7 +22,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/firebase-messaging-sw.js")
-      .then((reg) => console.log("SW registered"))
+      .then((reg) => console.log("SW registered",import.meta.env.VITE_BASE_URL))
       .catch((err) => console.log("SW registration failed", err));
   })
 }
