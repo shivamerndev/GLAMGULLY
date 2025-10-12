@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "Backend/app.js",
   "scripts": {
-    "dev": "npx nodemon Backend/app.js",
-    "build": "npm install && npm install --prefix Frontend  && npm run build --prefix Frontend",
+    "dev": "npx nodemon BACKEND/app.js",
+    "build": "npm install && npm install --prefix FRONTEND  && npm run build --prefix FRONTEND",
     "start": "node Backend/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
