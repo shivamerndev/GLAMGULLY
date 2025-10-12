@@ -1,0 +1,17 @@
+@keyframes cart {
+  0%   { left: -10%; }
+  40%, 60% { left: 50%; }
+  100% { left: 110%; }
+}
+@keyframes box {
+  0%, 40% { top: -20%; }
+  60% { top: 40%; left: 51%; opacity: 1; }
+  100% { top: 40%; left: 112%; opacity: 1; }
+}
+
+#carticon{
+  animation: cart 1.5s ease-in-out forwards;
+}
+#boxicon{
+  animation: box 1.5s ease-in-out forwards;
+}

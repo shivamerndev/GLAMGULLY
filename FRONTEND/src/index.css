@@ -1,0 +1,81 @@
+@import "tailwindcss";
+@import "@flaticon/flaticon-uicons/css/all/all.css";
+/* ya specific style */
+@import "@flaticon/flaticon-uicons/css/bold/rounded.css";
+@import "@flaticon/flaticon-uicons/css/solid/rounded.css";
+@theme {
+  --breakpoint-xs: 20rem;
+}
+@font-face {
+  font-family: PP;
+  src: url(../public/PP.woff);
+}
+
+#cards::-webkit-scrollbar {
+  display: none;
+  height: 5px;
+  transition: all 0.3s linear;
+}
+#cards::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #fcff9e 0%, #f59b14 100%);
+  border-radius: 20%;
+}
+#categoryscroll::-webkit-scrollbar {
+  display: none;
+}
+
+.marquee-track {
+  display: flex;
+  animation: marquee 15s linear infinite;
+  background-color: rgb(233, 186, 159);
+  transition: all ease-in-out;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marqueetext {
+  0% {
+    transform: translateY(25%);
+  }
+  100% {
+    transform: translateY(-30%);
+  }
+}
+
+#orderform input {
+  border: 1px solid rgba(14, 14, 14, 0.469);
+  outline-color: rgba(0, 110, 255, 0.748);
+}
+@keyframes pianoWave {
+  0% {
+    opacity: 0.3;
+    transform: translateX(-4px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateX(4px);
+  }
+}
+.animate-piano {
+  display: inline-flex;
+  gap: 1px;
+}
+.animate-piano span {
+  animation: pianoWave 1s infinite;
+}
+.animate-piano span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.animate-piano span:nth-child(3) {
+  animation-delay: 0.4s;
+}

@@ -1,0 +1,30 @@
+# Logs
+ToDo.md
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.env
+twilio config.js
+.env5
+node_modules
+vercel.json
+dist
+dist-ssr
+*.local
+firebase-admin-key.json
+Nehajsonkey.json
+my Google Account.env
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,271 @@
+import productModel from "../models/product.model.js";
+import { productValidator } from "../validator/product.validator.js"
+import { getCloudinaryResponse, uploadMultipleImages } from "../utils/cloudinary.js"
+
+export const createProduct = async (req, res) => {
+    try {
+        const { title, price, discount, description, category, quantity } = req.body;
+        // const productimage = req.file;
+        const productimage = req.files;
+        const { error } = productValidator(req.body)
+        if (error) return res.status(400).json({ error_message: error.details[0].message })
+        if (!productimage) return res.status(400).json({ error: "Product image is required" })
+        // const imageurl = await getCloudinaryResponse(productimage)
+        const imageurls = await uploadMultipleImages(productimage)
+        const Product = await productModel.create({
+            productimage: imageurls,
+            title,
+            price,
+            discount,
+            description,
+            category,
+            quantity
+        });
+        res.status(201).json({ message: "Product created successfully", product: Product });
+    } catch (err) {
+        res.send(err.message);
+    }
+};
+
+export const getAllProducts = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;       // current page
+        const limit = parseInt(req.query.limit) || 8;    // products per page
+        const sort = req.query.sort || "a-z"; // default sort
+        const skip = (page - 1) * limit;   // how many to skip
+        const { category, avail, min, max, rating } = req.query;
+
+        // Build filter object
+        let filter = { isActive: { $ne: false } };
+        // Add category filter only if category is provided and not 'all'
+        if (category) {
+            filter.category = category;
+        }
+        if (avail) {
+            filter.quantity = avail === 'instock' ? { $gt: 0 } : { $lte: 0 }
+        }
+        if (min && max) {
+            filter.price = { $gte: min, $lte: max };
+        }
+        if (rating) {
+            filter.ratings = { $exists: true, $gte: Number(rating) };
+        }
+        const total = await productModel.countDocuments(filter);
+        const instock = await productModel.countDocuments({ ...filter, quantity: { $gt: 0 } });
+        const outstock = await productModel.countDocuments({ ...filter, quantity: { $lte: 0 } });
+
+        // sort products
+        let sortOption = {};
+        switch (sort) {
+            case "a-z": sortOption = { title: 1 }; break;         // A-Z
+            case "z-a": sortOption = { title: -1 }; break;        // Z-A
+            case "low-high": sortOption = { price: 1 }; break;        // Low to High
+            case "high-low": sortOption = { price: -1 }; break;       // High to Low
+            case "oldest": sortOption = { createdAt: 1 }; break;    // Old to New
+            case "newest": sortOption = { createdAt: -1 }; break;   // New to Old
+        }
+
+        // Paged products
+        const products = await productModel.find(filter).sort(sortOption).skip(skip).limit(limit);
+        const categories = await productModel.distinct("category", { isActive: true })
+        res.status(200).json({ products, categories, totalPages: Math.ceil(total / limit), productsLength: { total, instock, outstock } });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const bestSellingProducts = async (req, res) => {
+    try {
+        const products = await productModel
+            .find({ isActive: { $ne: false }, price: { $gt: 300 } })
+            .sort({ title: -1, price: -1 }) // Sort by price descending, then title ascending
+            .limit(10);
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+export const getAllProductsAdmin = async (req, res) => {
+    try {
+        const products = await productModel.find().sort({ createdAt: -1 });
+        res.status(200).send(products)
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+
+export const getSingleProduct = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const product = await productModel.findOne({ _id: productId }).populate({
+            path: "reviews",
+            options: { sort: { createdAt: -1 } } // latest review first
+        });
+        res.send(product)
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+
+export const editProduct = async (req, res) => {
+    try {
+        const newObj = req.body;
+        let product = await productModel.findOne({ _id: newObj._id });
+        if (!product) return res.status(404).send("Product not found");
+
+        // Update product fields with newObj values
+        Object.keys(newObj).forEach(key => {
+            if (key !== "_id") {
+                product[key] = newObj[key];
+            }
+        });
+        await product.save();
+        res.status(200).send(product);
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+
+export const deleteProduct = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const product = await productModel.findOneAndDelete({ _id: productId });
+        res.status(200).send({ message: "Product deleted successfully" });
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+
+export const searchProduct = async (req, res) => {
+    try {
+        const { search } = req.body;
+        if (!search || typeof search !== "string" || !search.trim()) {
+            return res.status(400).json({ message: "Search term is required" });
+        }
+        // Use case-insensitive partial match for better search experience
+        const products = await productModel.find({
+            title: { $regex: search, $options: "i" }
+        });
+        res.status(200).json(products);
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+export const productCategory = async (req, res) => {
+    try {
+        const categories = await productModel.distinct("category");
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+export const productCategorypublic = async (req, res) => {
+    try {
+        const categories = await productModel.aggregate([
+            {
+                $match: { isActive: true } // ✅ sirf active products
+            },
+            {
+                $group: {
+                    _id: "$category",
+
+                    image: { $first: { $arrayElemAt: ["$productimage", 0] } } // category ka ek product image lelo
+                }
+            },
+            {
+                $project: {
+                    name: "$_id",
+                    image: 1,
+                    _id: 0
+                }
+            }
+        ])
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+export const productCategoryArchieve = async (req, res) => {
+    const { category } = req.body;
+
+    try {
+        const result = await productModel.updateMany(
+            { category: category },
+            { $set: { isActive: false } }
+        );
+        res.json({ message: "All products in this category archived.", result });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+export const productCategoryUnArchieve = async (req, res) => {
+    const { category } = req.body;
+    try {
+        const result = await productModel.updateMany(
+            { category: category },
+            { $set: { isActive: true } }
+        );
+        res.json({ message: "All products in this category Active.", result });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+export const TrendingProducts = async (req, res) => {
+    try {
+        let products = await productModel.find().limit(8).sort({ reviewsCount: -1 })
+        res.status(200).send(products);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+};
+export const PopularProduct = async (req, res) => {
+    try {
+        const products = await productModel.aggregate([{
+            $project: {
+                reviews: 1, reviewsCount: { $size: "$reviews" } // naya field create
+            }
+        },
+        { $sort: { reviewsCount: -1 } } // descending sort
+        ]).limit(10)
+        res.status(200).send(products);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+};
+export const PopularProducts = async (req, res) => {
+    try {
+        const products = await productModel.aggregate([
+            {
+                $addFields: {
+                    reviewsCount: { $size: { $ifNull: ["$reviews", []] } }
+                }
+            },
+            {
+                $sort: {
+                    price: -1,
+                    reviewsCount: -1
+                }
+            },
+            { $limit: 10 },
+            {
+                $lookup: {
+                    from: "commentproducts",   // review collection
+                    localField: "_id",         // product ka id
+                    foreignField: "productId", // review me productId
+                    as: "reviews"
+                }
+            }
+
+        ]).sort({ price: -1 });
+        res.status(200).send(products);
+    } catch (error) {
+        console.error("Error fetching popular products:", error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
