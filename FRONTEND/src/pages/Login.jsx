@@ -3,15 +3,17 @@ import { toast, ToastContainer } from 'react-toastify'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CustomerDataContext } from '../context/CustomerContext'
 import { Eye, EyeOff, Gem, Sparkles } from 'lucide-react'
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 
 const Login = () => {
   const navigate = useNavigate()
   const { state } = useLocation()
   const { login, getprofile } = useContext(CustomerDataContext)
-  const [form, setForm] = useState({ email: "", password: "" })
+  const [form, setForm] = useState({ emailorphone: "", password: "" })
   const [showPassword, setShowPassword] = useState(false)
-  
+
   const handleLogin = (e) => {
     e.preventDefault()
     login(form).then(res => {
@@ -23,9 +25,23 @@ const Login = () => {
         }
         navigate(state ? state.pathname + state.search : "/account", { replace: true });
       }, 1000)
-    }).catch(err => toast.error("Wrong email or password"))
+    }).catch(err => toast.error(err.response?.data?.message || "Login failed"))
   }
+  const handleSuccess = async (credentialResponse) => {
+    const { credential } = credentialResponse; // Google token
 
+    // 👇 Send token to backend
+    const res = await axios.post("http://localhost:4000/api/auth/google", { token: credential }, { withCredentials: true });
+    console.log(res.data.message)
+    if (res.status === 200) {
+      // ✅ Cookie set automatically by backend
+      // Now get user info from protected route
+      const profileRes = await axios.get("http://localhost:4000/api/auth/profile");
+      console.log("Logged in user:", profileRes.data);
+    } else {
+      console.log("Login failed");
+    }
+  };
   return (
     <div className="h-screen bg-gradient-to-br from-amber-50 via-white to-rose-50 flex justify-center">
       <ToastContainer />
@@ -45,15 +61,15 @@ const Login = () => {
         <form onSubmit={handleLogin} className="space-y-4 bg-gradient-to-r from-amber-800/80 to-orange-800/80 bg-clip-text text-transparent">
 
           <div>
-            <label className="block mb-2 font-medium" htmlFor="email">Email</label>
+            <label className="block mb-2 font-medium" htmlFor="email">Phone Or Email</label>
             <input
               required
-              type="email"
+              type="text"
               id="email"
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              value={form.email}
+              onChange={(e) => setForm({ ...form, emailorphone: e.target.value })}
+              value={form.emailorphone}
               className="w-full border border-amber-300 text-amber-950  rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200 bg-white/70"
-              placeholder="Enter your email"
+              placeholder="Enter your phone or email"
             />
           </div>
 
@@ -101,6 +117,20 @@ const Login = () => {
             Sign Up
           </Link>
         </div>
+
+        <div className="flex items-center w-full my-4 ">
+          <hr className="flex-grow border-gray-300" />
+          <span className="mx-4 text-gray-500">or</span>
+          <hr className="flex-grow border-gray-300" />
+        </div>
+
+        {/* <button onClick={() => alert("Google Oauht setup kar.")} className="w-full  flex items-center justify-center gap-4  cursor-pointer bg-amber-50/50 text-amber-950 py-2.5  rounded-xl transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          <img className='w-5 h-5' src="/google.png" alt="GOOGLE" />  <span>Login With Google</span>
+        </button> */}
+        {/* <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={() => console.log("Login Failed")} /> */}
+
       </div>
     </div>
   )

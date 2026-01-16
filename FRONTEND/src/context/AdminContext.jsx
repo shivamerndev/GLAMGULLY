@@ -1,5 +1,4 @@
-
-import  { useState } from 'react'
+import { useState } from 'react'
 import { createContext } from 'react'
 import { axiosAdminInstance } from '../utils/axios.instance'
 import { HandleError } from '../utils/catchError'
@@ -78,7 +77,22 @@ const AdminContext = ({ children }) => {
         const res = await axiosAdminInstance.get("/analytics")
         return res.data;
     })
-
+    const CreateCouponCode = HandleError(async (data) => {
+        const res = await axiosAdminInstance.post("/create-coupon", data)
+        return res.data;
+    })
+    const getCouponCode = HandleError(async () => {
+        const res = await axiosAdminInstance.get("/coupon")
+        return res.data;
+    })
+    const deleteCouponCode = HandleError(async (couponId) => {
+        const res = await axiosAdminInstance.delete(`/coupon/${couponId}`)
+        return res.data;
+    })
+   const editCouponCode = HandleError(async (data) => {
+        const res = await axiosAdminInstance.put("/coupon", {newObj:data})
+        return res.data;
+    })
 
     const createReviewImg = async (file) => {
         try {
@@ -106,7 +120,7 @@ const AdminContext = ({ children }) => {
     }
     return (
         <>
-            <AdminDataContext.Provider value={{AdminAnalytics, AdminDashboardStats, viewCustomerOrders, editOrderDetails, getOrderDetails, admin, allCustomers, readOrders, createReviewImg, readReviewsImg, createAdmin, LoginAdmin, GetAdminDashboard, LogoutAdmin }}>
+            <AdminDataContext.Provider value={{editCouponCode, deleteCouponCode, getCouponCode, CreateCouponCode, AdminAnalytics, AdminDashboardStats, viewCustomerOrders, editOrderDetails, getOrderDetails, admin, allCustomers, readOrders, createReviewImg, readReviewsImg, createAdmin, LoginAdmin, GetAdminDashboard, LogoutAdmin }}>
                 {children}
             </AdminDataContext.Provider>
         </>

@@ -16,6 +16,7 @@ const CheckoutForm = () => {
     const [showAddressForm, setShowAddressForm] = useState(false);
     const toggleHandle = () => { setIsOpen(!isOpen) }
     const [clickedAddress, setclickedAddress] = useState('id aayega')
+    const [states, setStates] = useState([]);
 
     useEffect(() => {
         const cart = JSON.parse(localStorage.getItem("cart"))
@@ -43,8 +44,18 @@ const CheckoutForm = () => {
         e.preventDefault()
         addAddress(addressForm).then(res => { setAddresses(prev => [...prev, res]); setShowAddressForm(false) }).catch(err => console.error(err.response.data))
     };
+    useEffect(() => {
+        fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+            headers: {
+                'X-CSCAPI-KEY': "M2ZVMTFjMUlwZVRvQkdGeVF5YkxoM1NKbWdOa3hXWlFCSHE5NnRyYg=="
+            }
+        })
+            .then(response => response.json())
+            .then(states => {
+                setStates(states);
+            });
 
-
+    }, [showAddressForm])
 
     return (profile ?
         <div className="md:flex w-full gap-4 px-2 justify-center  not-first:font-semibold text-gray-700 md:py-4 py-2">
@@ -59,16 +70,7 @@ const CheckoutForm = () => {
                 <OrderSummary toggleHandle={toggleHandle} isOpen={isOpen} />
             </section>
             <section className="md:w-1/2 md:mt-0 mt-4">
-                {!showAddressForm && <button
-                    onClick={() => {
-                        setShowAddressForm(true);
-                        // setAddressForm({ fullName: "", street: "", city: "", state: "", phone: "", postalCode: "", country: "India", customerId: profiles._id });
-                    }}
-                    className="bg-gradient-to-tl from-amber-700 my-4 to-amber-800  text-white lg:px-6 px-3 lg:py-3 py-2 rounded-xl font-semibold flex items-center space-x-1 md:space-x-2 transition-all duration-300  shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105">
-                    <Plus className="w-5 h-5" />
-                    <span className='text-sm leading-none truncate'>Add New Address
-                    </span>
-                </button>}
+
 
                 {showAddressForm && <div className="bg-white  w-full backdrop-blur-sm border-2 border-amber-200 outline-none rounded-xl py-3 mb-3 px-6 shadow-lg">
                     <h3 onClick={() => setShowAddressForm(true)} className="text-xl font-bold text-amber-900 mb-4">
@@ -128,12 +130,10 @@ const CheckoutForm = () => {
                         </div>
                         <div className="space-y-1">
                             <label className="block text-sm font-semibold text-amber-800">State</label>
-                            <input required
-                                type="text"
-                                value={addressForm.state}
-                                onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
-                                className="w-full px-4 py-2 border-2 capitalize border-amber-200 outline-none rounded-xl focus:ring-2 focus:ring-amber-500  transition-all duration-300 bg-white/50 backdrop-blur-sm"
-                                placeholder="Enter State" />
+                            <select required onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))} value={addressForm.state} className="w-full px-4 py-2 border-2 capitalize border-amber-200 outline-none rounded-xl focus:ring-2 focus:ring-amber-500  transition-all duration-300 bg-white/50 backdrop-blur-sm">
+                                <option disabled value='' >Select Your State</option>
+                                {states && states.map(s => <option key={s.id} className=' text-amber-950' value={s.name}>{s.name} ({s.iso2})</option>)}
+                            </select>
                         </div>
                         <div className="space-y-1">
                             <label className="block text-sm font-semibold text-amber-800">Phone No.</label>
@@ -192,10 +192,24 @@ const CheckoutForm = () => {
                             </div>
                         </div>
                     ))}
-                    {addresses.length > 1 && showaddresses.length === 1 && <h1 onClick={() => {
-                        setshowAddresses(addresses)
-                    }} className="text-amber-50 bg-gradient-to-tl to-amber-600 from-yellow-600 via-orange-400 inline px-3 cursor-pointer py-1 my-4 rounded-full text-sm font-bold ">View All</h1>}
+
                 </div>}
+                <div className="flex items-center justify-between px-4">
+
+                    { addresses?.length > 1 && showaddresses?.length === 1 && <h1 onClick={() => {
+                        setshowAddresses(addresses)
+                    }} className="text-amber-50 bg-gradient-to-tl to-amber-700 from-yellow-800 via-orange-700 inline px-3 cursor-pointer py-1.5 my-4 rounded-md text-sm font-semibold ">View All </h1>}
+                    {!showAddressForm && <button
+                        onClick={() => {
+                            setShowAddressForm(true);
+                            // setAddressForm({ fullName: "", street: "", city: "", state: "", phone: "", postalCode: "", country: "India", customerId: profiles._id });
+                        }}
+                        className="bg-gradient-to-tl from-amber-700 my-4 to-amber-800  text-white lg:px-4 px-2 lg:py-2 py-1.5 rounded-md font-semibold flex items-center space-x-1 md:space-x-2 transition-all duration-300  shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105">
+                        <Plus className="w-5 h-5" />
+                        <span className='text-sm leading-none truncate'>Add New Address
+                        </span>
+                    </button>}
+                </div>
 
             </section>
         </div> : <ProgresssLoader />

@@ -11,14 +11,17 @@ const OrderSummary = ({ toggleHandle, isOpen = true }) => {
     const location = useLocation();
     const { productId } = useParams()
     const { singleProduct } = useContext(ProductDataContext)
-    const { getCartItems, createOrder, createOrderWithCart, sendNotification } = useContext(CustomerDataContext);
+    const { getCartItems, createOrder, createOrderWithCart, sendNotification, getDiscount } = useContext(CustomerDataContext);
     const [product, setproduct] = useState(null)
     const [amount, setamount] = useState()
+    const [updatedAmount, setupdatedAmount] = useState(0)
     const [buyquantity, setbuyquantity] = useState(1)
     const [discountCode, setDiscountCode] = useState("")
+    const [couponStatus, setcouponStatus] = useState("")
     const [productfromCart, setProductFromCart] = useState(null)
     const params = new URLSearchParams(location.search)
     const customerAddress = params.get("address") || null;
+    const finalprice = amount - updatedAmount
 
     useEffect(() => {
         if (productId) {
@@ -46,9 +49,8 @@ const OrderSummary = ({ toggleHandle, isOpen = true }) => {
     const CreateOrderFunction = () => {
         try {
             if (productId) {
-                let obj = { shippingAddress: customerAddress, totalAmount: amount };
+                let obj = { shippingAddress: customerAddress, totalAmount: finalprice };
                 obj = { ...obj, buyquantity: buyquantity, products: product }
-                const updatedProduct = { ...product, quantity: product.quantity - buyquantity };
                 createOrder(obj).then(res => {
                     if (res) {
                         sendNotification({ title: "Glamgully", body: `🎉 NEW ORDER RECEIVED ✅\n Order ID: ${res._id}\n Amount: ₹${obj.totalAmount}` });
@@ -154,16 +156,23 @@ const OrderSummary = ({ toggleHandle, isOpen = true }) => {
                             <Tag className="w-4 h-4 text-amber-600" />
                             <span className="text-sm font-medium text-amber-800">Have a discount code?</span>
                         </div>
+                        {couponStatus && <p className={` ${updatedAmount ? "text-green-500" : "text-red-500"} text-sm  mb-1 px-2 font-semibold flex items-center gap-2`}><span className={`text-sm text-white ${updatedAmount ? "hidden" : "bg-red-400"} rounded-full w-5 h-5 text-center  font-normal`}>&times;</span>{couponStatus}</p>}
                         <div className="flex gap-3">
                             <input
                                 value={discountCode}
-                                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                                onChange={(e) => { setDiscountCode(e.target.value); setcouponStatus(""); setupdatedAmount(0); }}
                                 type="text"
                                 placeholder="Enter discount code"
                                 className="flex-1 border-2 border-amber-200 text-amber-900 uppercase rounded-xl px-4 py-3 text-sm font-medium placeholder-amber-500 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
                             />
-                            <button className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-semibold rounded-xl hover:from-amber-700 hover:to-amber-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
-                                Apply
+                            <button onClick={() => {
+                                if (discountCode === "" || discountCode.length < 4) return;
+                                getDiscount(discountCode, +amount, product.category).then(res => {
+                                    setcouponStatus(res.message);
+                                    setupdatedAmount(Math.floor(res.discounted).toFixed(2));
+                                }).catch(err => setcouponStatus(err.response.data.message))
+                            }} className={`px-6 ${couponStatus && "pointer-events-none"} ${updatedAmount > 0 ? " from-green-500 to-green-600" : "from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800"} py-3 bg-gradient-to-r  text-white text-sm font-semibold rounded-xl  transform hover:scale-105 transition-all duration-200 shadow-lg`}>
+                              {updatedAmount > 0 ? "Applied" : "Apply"}
                             </button>
                         </div>
                     </div>
@@ -186,11 +195,16 @@ const OrderSummary = ({ toggleHandle, isOpen = true }) => {
                             </span>
                         </div>
 
+                        {updatedAmount > 0 && <div className="flex justify-between items-center text-green-600">
+                            <span className="font-medium">Coupon Applied ✓</span>
+                            <span className="font-semibold text-green-800">- ₹{updatedAmount}</span>
+                        </div>}
+
                         <div className="h-px bg-amber-200/60"></div>
 
                         <div className="flex justify-between items-center text-amber-900 text-lg font-bold">
                             <span>Total</span>
-                            <span>₹{amount}</span>
+                            <span>₹{finalprice.toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -198,8 +212,7 @@ const OrderSummary = ({ toggleHandle, isOpen = true }) => {
                     <button
                         onClick={() => {
                             if (customerAddress) {
-
-                                handlePayment(amount, CreateOrderFunction)
+                                handlePayment(finalprice, CreateOrderFunction)
                             } else {
                                 alert("Address Required.")
                             }

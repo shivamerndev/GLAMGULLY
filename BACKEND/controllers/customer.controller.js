@@ -3,6 +3,7 @@ import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import Address from "../models/address.model.js";
 import orderModel from "../models/order.model.js";
+import Coupon from "../models/coupon.model.js";
 
 export const registerCustomer = async (req, res) => {
     try {
@@ -47,19 +48,16 @@ export const registerCustomer = async (req, res) => {
 };
 export const loginCustomer = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
+        const { emailorphone, password } = req.body;
+        if (!emailorphone || !password) return res.status(400).json({ message: "Email/Phone and password are required." });
         // find user with password
-        const user = await Customer.findOne({ email }).select("+password");
-        if (!user) return res.status(400).json({ message: "Invalid email or password" });
-
+        const user = await Customer.findOne({ $or: [{ email: emailorphone }, { phone: emailorphone }] }).select("+password")
+        if (!user) return res.status(400).json({ message: "Invalid email/phone or password" });
         // compare password
         const isMatch = await user.comparePassword(password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
-
-        // generate token
+        if (!isMatch) return res.status(400).json({ message: "Invalid email/phone or password" });
+        // generate token 
         const token = user.generateToken();
-
         // send token in cookie
         res.cookie("token", token, {
             httpOnly: true,
@@ -67,10 +65,9 @@ export const loginCustomer = async (req, res) => {
             sameSite: "strict",
             maxAge: 1 * 24 * 60 * 60 * 1000,
         });
-
         res.json({
             message: "Login successful",
-            user: { _id: user._id, fullname: user.fullname, email: user.email, username: user.username },
+            user: { _id: user._id, fullname: user.fullname, email: user.email },
         });
     } catch (error) {
         console.error(error);
@@ -441,6 +438,42 @@ export const sameOrderPlaced = async (req, res) => {
         res.status(201).json(order);
     } catch (error) {
         console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+export const useCoupon = async (req, res) => {
+    const { code, ordervalue, category } = req.body;
+    try {
+        const coupon = await Coupon.findOne({ code: code });
+        if (!coupon) {
+            return res.status(404).json({ message: "Coupon not found." });
+        }
+        if (!coupon.isActive) {
+            return res.status(400).json({ message: "Coupon is not active." });
+        }
+        if (coupon.applicableCategories.includes("all")) {
+            console.log(coupon.applicableCategories);
+        }
+        else if (!coupon.applicableCategories.includes(category)) {
+            return res.status(400).json({ message: `Coupon is not applicable for this category.` });
+        }
+        if (coupon.minOrderValue > ordervalue) {
+            return res.status(400).json({ message: `Minimum order value should be ${coupon.minOrderValue} to apply this coupon.` });
+        }
+        // Check if coupon is expired
+        if (new Date() > coupon.expirationDate) {
+            return res.status(400).json({ message: "Coupon has expired." });
+        }
+        // Check usage limit
+        if (coupon.usedCount >= coupon.usageLimit) {
+            return res.status(400).json({ message: "Coupon usage limit reached." });
+        }
+        const discounted = (ordervalue * coupon.discountPercentage) / 100;
+        // Increment used count
+        coupon.usedCount += 1;
+        await coupon.save();
+        res.status(200).json({ message: "Coupon applied successfully.", discounted });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };

@@ -33,7 +33,7 @@ const FlashSale = ({ allProduct, page, profile, setRemove }) => {
         return calculateTimeLeft(endTime);
     });
     const [activeCategory, setActiveCategory] = useState("All");
-    const types = ["All", "Newest", "Popular", "Trending", "Best Selling"];
+    const types = ["All", "Newest", "Trending", "Best Selling"];
 
     useEffect(() => {
         if (profile) {
@@ -160,13 +160,21 @@ const FlashSale = ({ allProduct, page, profile, setRemove }) => {
                     <h1 className="text-lg md:text-2xl font-semibold text-gray-800">
                         Flash Sale⚡
                     </h1>
-                    <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 animate-bounce duration-1000">
-                        <Clock className="w-4 h-4" />
-                        <span className="hidden md:block uppercase">Ends in </span>
-                        <span>
-                            {String(timeLeft.hours).padStart(2, '0')}:
-                            {String(timeLeft.minutes).padStart(2, '0')}:
+                    <div className=" text-amber-950/90 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 ">
+                        <Clock className="w-4 h-4 text-amber-950/70" />
+                        <span className="hidden md:block uppercase pr-2 text-amber-950/70">Ends in </span>
+                        <span className="bg-rose-950/10 rounded w-6 text-center ">
+                            {String(timeLeft.hours).padStart(2, '0')}
+                        </span>
+                        :
+                        <span className="bg-rose-950/10 rounded w-6 text-center ">
+                            {String(timeLeft.minutes).padStart(2, '0')}
+
+                        </span>
+                        :
+                        <span className="bg-rose-950/10 rounded w-6 text-center ">
                             {String(timeLeft.seconds).padStart(2, '0')}
+
                         </span>
                     </div>
                 </div>

@@ -1,19 +1,22 @@
 import { useContext, useState } from 'react'
 import { toast, ToastContainer } from "react-toastify"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { CustomerDataContext } from '../context/CustomerContext'
 import { Eye, EyeOff, Gem, Sparkles } from 'lucide-react'
 
 const Register = () => {
     const { register } = useContext(CustomerDataContext)
+    const navigate = useNavigate()
     const obj = { fullname: "", email: "", password: "", phone: "", gender: "male" }
     const [form, setForm] = useState(obj)
     const [confirm, setConfirm] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault()
+        if (isSubmitting) return
         if (form.password !== confirm) {
             toast.warn("Passwords don't match!")
             return
@@ -22,17 +25,25 @@ const Register = () => {
             toast.warn("Phone must be 10 digits.")
             return
         }
-        register(form).then(res => {
-            if (res.status === 200) {
+
+        try {
+            setIsSubmitting(true)
+            const res = await register(form)
+            if (res.message) {
+                console.log(res.message)
                 toast.success("Registered Successfully 😍")
+                navigate("/account", { replace: true })
             }
-        }).catch(err => {
+        } catch (err) {
             if (err?.response?.data?.message) {
                 toast.error(err.response.data.message)
             } else {
-                console.log(err);
+                console.error(err)
+                toast.error("Registration failed")
             }
-        })
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
@@ -154,10 +165,10 @@ const Register = () => {
                         </select>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full cursor-pointer bg-gradient-to-r from-amber-500 to-rose-500 text-white py-1.5 mt-2 rounded-lg hover:from-amber-600 hover:to-rose-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                        Create Account
+                    <button type="submit"
+                        disabled={isSubmitting}
+                        className={`w-full cursor-pointer bg-gradient-to-r from-amber-500 to-rose-500 text-white py-1.5 mt-2 rounded-lg transition-all duration-200 font-semibold shadow-lg transform ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:from-amber-600 hover:to-rose-600 hover:shadow-xl hover:-translate-y-0.5'}`}>
+                        {isSubmitting ? 'Creating...' : 'Create Account'}
                     </button>
                 </form>
 
@@ -168,7 +179,7 @@ const Register = () => {
                     </Link>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

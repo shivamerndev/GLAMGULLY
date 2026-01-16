@@ -14,6 +14,7 @@ const AccountSettings = () => {
     const [confirm, setConfirm] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [states, setStates] = useState([]);
 
     const tabs = [
         { id: 'profile', label: 'Update Your Profile', icon: User },
@@ -95,6 +96,19 @@ const AccountSettings = () => {
         }
         updatePassword(passwordForm).then(res => { toast.success(res.message); setPasswordForm(false) }).catch(err => { toast.error(err.response.data.message); })
     };
+    useEffect(() => {
+        // Get states in a country
+        fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+            headers: {
+                'X-CSCAPI-KEY': "M2ZVMTFjMUlwZVRvQkdGeVF5YkxoM1NKbWdOa3hXWlFCSHE5NnRyYg=="
+            }
+        })
+            .then(response => response.json())
+            .then(states => {
+                setStates(states);
+            });
+
+    }, [showAddressForm])
     return (profiles ?
         <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex  items-start  justify-center">
             <ToastContainer />
@@ -336,12 +350,16 @@ const AccountSettings = () => {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <label className="block text-sm font-semibold text-amber-800">State</label>
-                                                    <input required
+                                                    <select  onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))} value={addressForm.state} className="w-full px-4 py-2 border-2 capitalize border-amber-200 outline-none rounded-xl focus:ring-2 focus:ring-amber-500  transition-all duration-300 bg-white/50 backdrop-blur-sm">
+                                                        {/* <option selected >{addressForm.state}</option> */}
+                                                        {states && states.map(s => <option key={s.id} className=' text-amber-950' value={s.name}>{s.name} ({s.iso2})</option>)}
+                                                    </select>
+                                                    {/* <input required
                                                         type="text"
                                                         value={addressForm.state}
                                                         onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
                                                         className="w-full px-4 py-2 border-2 capitalize border-amber-200 outline-none rounded-xl focus:ring-2 focus:ring-amber-500  transition-all duration-300 bg-white/50 backdrop-blur-sm"
-                                                        placeholder="Enter State" />
+                                                        placeholder="Enter State" /> */}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <label className="block text-sm font-semibold text-amber-800">Phone No.</label>

@@ -10,7 +10,7 @@ self.addEventListener('install', event => {
       ]);
     })
   );
-  console.log("Service Worker Installed");
+  console.log("Service Worker Installed service worker.js");
 });
 
 self.addEventListener('fetch', event => {

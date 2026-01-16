@@ -26,7 +26,6 @@ export const createProduct = async (req, res) => {
         res.send(err.message);
     }
 };
-
 export const getAllProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;       // current page
@@ -73,7 +72,6 @@ export const getAllProducts = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 export const bestSellingProducts = async (req, res) => {
     try {
         const products = await productModel
@@ -84,12 +82,37 @@ export const bestSellingProducts = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
-
+};
 export const getAllProductsAdmin = async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;    // products per page
+    const page = parseInt(req.query.page) || 1;       // current page
+    const skip = (page - 1) * limit;   // how many to skip
+    const { category, availability, price, status } = req.query;
     try {
-        const products = await productModel.find().sort({ createdAt: -1 });
-        res.status(200).send(products)
+        let filter = {};
+        // Add category filter only if category is provided and not 'all'
+        if (category) {
+            filter.category = category;
+        }
+        if (availability) {
+            filter.quantity = availability === 'instock' ? { $gt: 0 } : { $lte: 0 }
+        }
+        if (price && price === '1000+') {
+            filter.price = { $gte: "1000", $lte: "20000" };
+        } else if (price) {
+            // const [min, max] = price.split('-').map(num=> parseInt(num));
+            const [min, max] = price.split('-').map(Number); // convert to numbers
+            filter.price = { $gte: min, $lte: max };
+        }
+        if (status) {
+            filter.isActive = { $eq: status === 'active' ? true : false };
+        }
+
+        const lowStocks = await productModel.countDocuments({ quantity: { $lte: 10 } });
+        const total = await productModel.countDocuments(filter);
+        const products = await productModel.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 });
+        const categories = await productModel.distinct("category")
+        res.status(200).json({ products, categories, totalPages: Math.ceil(total / limit), totalProducts: total,lowStocks });
     } catch (error) {
         res.send(error.message)
     }
@@ -107,7 +130,6 @@ export const getSingleProduct = async (req, res) => {
         res.send(error.message)
     }
 }
-
 export const editProduct = async (req, res) => {
     try {
         const newObj = req.body;
@@ -126,18 +148,32 @@ export const editProduct = async (req, res) => {
         res.send(error.message)
     }
 }
-
 export const deleteProduct = async (req, res) => {
     try {
         const { productId } = req.params;
-        const product = await productModel.findOneAndDelete({ _id: productId });
+        await productModel.findOneAndDelete({ _id: productId });
         res.status(200).send({ message: "Product deleted successfully" });
     } catch (error) {
         res.send(error.message)
     }
 }
-
 export const searchProduct = async (req, res) => {
+    try {
+        const { search } = req.body;
+        if (!search || typeof search !== "string" || !search.trim()) {
+            return res.status(400).json({ message: "Search term is required" });
+        }
+        // Use case-insensitive partial match for better search experience
+        const products = await productModel.find({
+            title: { $regex: search, $options: "i" },
+            isActive: { $ne: false }
+        }).select('_id title');
+        res.status(200).json(products);
+    } catch (error) {
+        res.send(error.message)
+    }
+}
+export const searchProductForAdmin = async (req, res) => {
     try {
         const { search } = req.body;
         if (!search || typeof search !== "string" || !search.trim()) {
@@ -154,8 +190,23 @@ export const searchProduct = async (req, res) => {
 }
 export const productCategory = async (req, res) => {
     try {
-        const categories = await productModel.distinct("category");
-        res.status(200).json(categories);
+        const categories = await productModel.aggregate([
+            {
+                $group: {
+                    _id: "$category",
+                    image: { $first: { $arrayElemAt: ["$productimage", 0] } } // category ka ek product image lelo
+                }
+            },
+            {
+                $project: {
+                    name: "$_id",
+                    image: 1,
+                    _id: 0
+                }
+            }
+        ])
+        const activecategory = await productModel.distinct("category", { isActive: false })
+        res.status(200).json({ categories, activecategory });
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
@@ -169,7 +220,6 @@ export const productCategorypublic = async (req, res) => {
             {
                 $group: {
                     _id: "$category",
-
                     image: { $first: { $arrayElemAt: ["$productimage", 0] } } // category ka ek product image lelo
                 }
             },
@@ -187,28 +237,13 @@ export const productCategorypublic = async (req, res) => {
     }
 }
 export const productCategoryArchieve = async (req, res) => {
-    const { category } = req.body;
-
+    const { category, event } = req.body;
     try {
         const result = await productModel.updateMany(
             { category: category },
-            { $set: { isActive: false } }
+            { $set: { isActive: !event } }
         );
-        res.json({ message: "All products in this category archived.", result });
-
-    } catch (error) {
-        res.status(500).json({ error: error.message })
-    }
-}
-export const productCategoryUnArchieve = async (req, res) => {
-    const { category } = req.body;
-    try {
-        const result = await productModel.updateMany(
-            { category: category },
-            { $set: { isActive: true } }
-        );
-        res.json({ message: "All products in this category Active.", result });
-
+        res.json({ message: "Query Successfully Resolved.", result });
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
@@ -219,53 +254,5 @@ export const TrendingProducts = async (req, res) => {
         res.status(200).send(products);
     } catch (error) {
         res.status(500).send(error.message);
-    }
-};
-export const PopularProduct = async (req, res) => {
-    try {
-        const products = await productModel.aggregate([{
-            $project: {
-                reviews: 1, reviewsCount: { $size: "$reviews" } // naya field create
-            }
-        },
-        { $sort: { reviewsCount: -1 } } // descending sort
-        ]).limit(10)
-        res.status(200).send(products);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-export const PopularProducts = async (req, res) => {
-    try {
-        const products = await productModel.aggregate([
-            {
-                $addFields: {
-                    reviewsCount: { $size: { $ifNull: ["$reviews", []] } }
-                }
-            },
-            {
-                $sort: {
-                    price: -1,
-                    reviewsCount: -1
-                }
-            },
-            { $limit: 10 },
-            {
-                $lookup: {
-                    from: "commentproducts",   // review collection
-                    localField: "_id",         // product ka id
-                    foreignField: "productId", // review me productId
-                    as: "reviews"
-                }
-            }
-
-        ]).sort({ price: -1 });
-        res.status(200).send(products);
-    } catch (error) {
-        console.error("Error fetching popular products:", error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
     }
 };

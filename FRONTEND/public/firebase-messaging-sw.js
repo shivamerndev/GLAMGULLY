@@ -37,7 +37,7 @@ self.addEventListener('install', event => {
       ]);
     })
   );
-  console.log("SW Installed");
+  console.log("SW Installed firebase");
 });
 
 self.addEventListener('fetch', event => {

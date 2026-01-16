@@ -3,6 +3,7 @@ import validateAdmin from "../validator/admin.validator.js";
 import orderModel from "../models/order.model.js"
 import Customer from "../models/customer.model.js"
 import Product from "../models/product.model.js"
+import Coupon from "../models/coupon.model.js";
 
 export const adminRegister = async (req, res) => {
   try {
@@ -386,5 +387,72 @@ export const getAnalyticsData = async (req, res) => {
   } catch (error) {
     console.error("Analytics Error:", error);
     res.status(500).json({ message: "Error fetching Analytics Data", error: error.message });
+  }
+}
+export const createDiscountCoupon = async (req, res) => {
+  const { code, discountPercentage, expirationDate, usageLimit, applicableCategories, minOrderValue } = req.body;
+  try {
+    if (!code || !discountPercentage || !expirationDate || !usageLimit || !minOrderValue) {
+      return res.status(400).send("All fields are required except applicableCategories.");
+    }
+    const coupon = await Coupon.create({
+      code,
+      discountPercentage,
+      expirationDate,
+      minOrderValue,
+      usageLimit,
+      applicableCategories
+    })
+    res.status(201).json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+export const getCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.status(200).json(coupons);
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+export const deleteCoupon = async (req, res) => {
+  const { couponId } = req.params;
+  try {
+    const coupon = await Coupon.findByIdAndDelete(couponId);
+    if (!coupon) return res.status(404).send("Coupon not found.");
+    res.status(200).json({ message: "Coupon deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+export const couponStatus = async (req, res) => {
+  const { couponId } = req.params;
+  try {
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) return res.status(404).send("Coupon not found.");
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+    res.status(200).json({ message: "Coupon deactivated successfully." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+export const editCoupon = async (req, res) => {
+  const { newObj } = req.body;
+  try {
+    let coupon = await Coupon.findById(newObj._id);
+    if (!coupon) return res.status(404).send("Coupon not found.");
+    // Update coupon fields with newObj values
+    Object.keys(newObj).forEach(key => {
+      if (key !== "_id") {
+        coupon[key] = newObj[key];
+      }
+    });
+    await coupon.save();
+    res.status(200).json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }

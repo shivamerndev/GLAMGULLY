@@ -37,14 +37,9 @@ const ProductContext = ({ children }) => {
             console.log(error.message)
         }
     }
-    const getProductsAdmin = async () => {
+    const getProductsAdmin = async (page, filters) => {
         try {
-            const response = await axiosProductInstance.get('/getadminproduct', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json"
-                }
-            });
+            const response = await axiosProductInstance.get(`/getadminproduct?page=${page}&${filters}`);
             return (response.data);
         } catch (error) {
             console.log(error.message)
@@ -91,12 +86,12 @@ const ProductContext = ({ children }) => {
             console.error(error)
         }
     }
-    const archiveCategory = async (category) => {
+    const archiveCategory = async (category, event) => {
         try {
-            const response = await axiosProductInstance.post(`/archive/category`, { category })
+            const response = await axiosProductInstance.post(`/archive/category`, { category, event })
             return (response.data);
         } catch (error) {
-            console.log(error.message);
+            console.log(error);
 
         }
     }
@@ -134,10 +129,18 @@ const ProductContext = ({ children }) => {
 
         }
     }
+    const searchProductForAdmin = async (search) => {
+        try {
+            const response = await axiosProductInstance.post(`/admin/search`, { search })
+            return (response.data)
+        } catch (error) {
+            console.error(error.message)
+        }
+    }
     const [lengthc, setlengthc] = useState("")
     return (
         <>
-            <ProductDataContext.Provider value={{ TrendingProducts, PopularProducts, categoryPublic, activeCategory, archiveCategory, categoryProduct, bestSellingProducts, lengthc, setlengthc, searchProduct, createProduct, getProducts, getProductsAdmin, singleProduct, editProduct, deleteProduct }}>
+            <ProductDataContext.Provider value={{searchProductForAdmin, TrendingProducts, PopularProducts, categoryPublic, activeCategory, archiveCategory, categoryProduct, bestSellingProducts, lengthc, setlengthc, searchProduct, createProduct, getProducts, getProductsAdmin, singleProduct, editProduct, deleteProduct }}>
                 {children}
             </ProductDataContext.Provider>
         </>

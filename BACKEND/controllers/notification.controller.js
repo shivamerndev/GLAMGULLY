@@ -21,7 +21,7 @@ export const subscribe = async (req, res) => {
 export const sendNotification = async (req, res) => {
   const { title, body } = req.body;
   try {
-    const subscriptions = await Subscription.find({});
+    const subscriptions = await Subscription.find();
     const tokens = subscriptions.map(sub => sub.token);
 
     const message = {
@@ -30,7 +30,7 @@ export const sendNotification = async (req, res) => {
     };
 
     const response = await admin.messaging().sendEachForMulticast(message);
-    console.log('Successfully sent message:', response);
+    // console.log('multicast response:', JSON.stringify(response, null, 2));
 
     res.status(200).json({
       message: 'Notifications sent successfully',

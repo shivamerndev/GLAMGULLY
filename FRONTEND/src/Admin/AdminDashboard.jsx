@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import {
     IndianRupeeIcon,
     ShoppingCart,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { AdminDataContext } from '../context/AdminContext';
 import { useNavigate } from "react-router-dom"
+import {setupNotifications,onForegroundMessage} from '../firebase'
 
 const AdminDashboard = () => {
     const { AdminDashboardStats } = useContext(AdminDataContext)
@@ -31,6 +32,8 @@ const AdminDashboard = () => {
         }).catch(err => console.log(err))
     }
     useEffect(() => {
+        setupNotifications();
+        onForegroundMessage();
         getData()
     }, []);
 

@@ -1,6 +1,6 @@
 import express from 'express'
 import { customerAuth } from "../middlewares/customers.auth.js";
-import { loginCustomer, logoutCustomer, registerCustomer, updateCustomer, getCustomerProfile, addToWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart, placeOrder, getOrdersHistory, addAddress, updateAddress, removeAddress, getWishlist, getCart, getAddresses, updatePassword, syncCartItems, placeOrderWithCart, getSingleOrderDetails, sameOrderPlaced } from "../controllers/customer.controller.js";
+import { loginCustomer, logoutCustomer, registerCustomer, updateCustomer, getCustomerProfile, addToWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart, placeOrder, getOrdersHistory, addAddress, updateAddress, removeAddress, getWishlist, getCart, getAddresses, updatePassword, syncCartItems, placeOrderWithCart, getSingleOrderDetails, sameOrderPlaced, useCoupon } from "../controllers/customer.controller.js";
 const router = express.Router()
 
 router.post("/register", registerCustomer);
@@ -26,5 +26,6 @@ router.get("/address", customerAuth, getAddresses);
 router.post("/address", customerAuth, addAddress);
 router.put("/address/:addressId", customerAuth, updateAddress);
 router.delete("/address/:addressId", customerAuth, removeAddress);
+router.post("/usecoupon", customerAuth, useCoupon);
 
 export default router;

@@ -38,7 +38,7 @@ const BannerCarousel = () => {
         const interval = setInterval(() => {
             setCurrent((prev) => (prev + 1) % banners.length);
         }, 3000);
-        return () => {
+        return () => {  
             clearInterval(interval)
         };
     }, [banners.length]);

@@ -1,11 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { AdminDataContext } from '../context/AdminContext';
-import { Package, Users, MessageSquare, BarChart3, Settings, Shield, HelpCircle, HamburgerIcon, MenuIcon } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Package, Users, MessageSquare, BarChart3, MenuIcon, Archive } from 'lucide-react';
 import { IoClose } from 'react-icons/io5';
+import { MdDiscount } from 'react-icons/md';
 
 const AdminNavbar = () => {
-    // const { admin } = useContext(AdminDataContext)
     const navigate = useNavigate()
     const [activeNavItem, setActiveNavItem] = useState('dashboard');
     const [showsm, setShowsm] = useState(false)
@@ -14,12 +13,11 @@ const AdminNavbar = () => {
         { icon: Package, label: 'dashboard' },
         { icon: Package, label: 'orders' },
         { icon: Users, label: 'customers' },
-        { icon: MessageSquare, label: 'messages' },
         { icon: Package, label: 'products' },
+        { icon: MessageSquare, label: 'messages' },
         { icon: BarChart3, label: 'analytics' },
-        { icon: Settings, label: 'settings' },
-        { icon: Shield, label: 'security' },
-        { icon: HelpCircle, label: 'help' }
+        { icon: MdDiscount, label: 'coupon' },
+        { icon: Archive, label: 'archive' }
     ];
 
     useEffect(() => {

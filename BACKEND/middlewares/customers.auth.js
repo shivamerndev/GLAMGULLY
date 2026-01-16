@@ -13,3 +13,16 @@ export const customerAuth = async (req, res, next) => {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
+
+export const googleAuthMiddleware = async (req, res, next) => {
+  try {
+    const token = req.cookies.token; // cookie se token nikala
+    console.log('token', token)
+    if (!token) return res.status(401).json({ message: "Not authenticated" });
+    const decoded = jwt.verify(token, process.env.USER_SECRET_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};

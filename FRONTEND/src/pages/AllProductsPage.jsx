@@ -19,6 +19,7 @@ const AllProductsPage = () => {
     const [hasMore, setHasMore] = useState(true);
 
     useEffect(() => {
+        document.title = "All Products - E-Commerce App";
         setPage(1)
         setHasMore(true);
         getProducts(1, limit, query).then((data) => {

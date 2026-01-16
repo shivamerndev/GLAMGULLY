@@ -1,3 +1,4 @@
+import axios from "axios";
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
@@ -10,7 +11,6 @@ const firebaseConfig = {
   appId: "1:736934255995:web:be2364419590fb845871de",
   // measurementId: "G-PDWHRLB7S3"
 };
-
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
@@ -22,18 +22,17 @@ export const getOrRenewToken = async () => {
       const currentToken = await getToken(messaging, {
         vapidKey: "BKoV1qja0tzUN_d-LH3yMUv7YJEEsmgmS4UVA0_53v1wTpX9XgL0PwExMSmXvMLsU5FLTnXUtkd0elE5mVvRYLI" // Yahan VAPID public key daalein
       });
-      console.log("FCM :", currentToken.slice(0,10));
+      console.log("FCM :", currentToken.split("_")[0]);
       return currentToken;
     } else {
       console.log('Permission denied for notifications.');
       return null;
     }
   } catch (error) {
-    console.error('An error occurred while retrieving token.', error);
+    console.log('An error occurred while retrieving token.', error);
     return null;
   }
 };
-
 // Foreground messages handle karne ke liye
 export const onForegroundMessage = () => {
   onMessage(messaging, (payload) => {
@@ -44,4 +43,11 @@ export const onForegroundMessage = () => {
     };
     new Notification(notificationTitle, notificationOptions);
   });
+};
+
+export const setupNotifications = async () => {
+  const token = await getOrRenewToken();
+  if (token) {
+   await axios.post(`${import.meta.env.VITE_BASE_URL}/subscribe`, { token });
+  }
 };

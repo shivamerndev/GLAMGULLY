@@ -109,9 +109,13 @@ const CustomerContext = ({ children }) => {
         const res = await axiosCustomerInstance.get(`/order/${orderId}`)
         return (res.data)
     })
+    const getDiscount = HandleError(async (code,amount,category) => {
+        const res = await axiosCustomerInstance.post(`/usecoupon`,{code:code,ordervalue:amount,category:category})
+        return (res.data)
+    })
     return (
         <>
-            <CustomerDataContext.Provider value={{sendNotification, createReOrder, getOrderDetails, getOrderHistory, createOrderWithCart, createOrder, profile, syncCartToDB, updatePassword, deleteAddress, editAddress, addAddress, getAddresses, getCartItems, removeFromCart, updateCart, addToCart, removeWishlist, addWishlist, getWishlist, logout, updateProfile, getprofile, login, register }}>
+            <CustomerDataContext.Provider value={{ getDiscount, sendNotification, createReOrder, getOrderDetails, getOrderHistory, createOrderWithCart, createOrder, profile, syncCartToDB, updatePassword, deleteAddress, editAddress, addAddress, getAddresses, getCartItems, removeFromCart, updateCart, addToCart, removeWishlist, addWishlist, getWishlist, logout, updateProfile, getprofile, login, register }}>
                 {children}
             </CustomerDataContext.Provider>
         </>

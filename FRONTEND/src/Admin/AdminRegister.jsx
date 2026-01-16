@@ -1,17 +1,18 @@
 import React, { useContext, useState } from 'react'
 import { AdminDataContext } from '../context/AdminContext'
 import { toast, ToastContainer } from "react-toastify"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Gem, Sparkles } from 'lucide-react'
 
 const Register = () => {
     const { createAdmin } = useContext(AdminDataContext)
     const obj = { profilepic: undefined, username: "", fullname: "", email: "", password: "", phone: "", gender: "male" }
     const [form, setForm] = useState(obj)
+    const navigate = useNavigate()
 
     const handleRegister = (e) => {
         e.preventDefault()
-        createAdmin(form).then(res => { toast.success(res) }).catch(err => toast.error(err?.response.data))
+        createAdmin(form).then(res => { toast.success(res); navigate('/admin/glamgully/dashboard') }).catch(err => toast.error(err?.response.data))
     }
 
     return (
