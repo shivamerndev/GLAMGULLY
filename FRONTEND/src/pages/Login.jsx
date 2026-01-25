@@ -31,7 +31,7 @@ const Login = () => {
  
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      const res = await axios.post("https://glamgully.onrender.com/auth/google", { accessToken: tokenResponse.access_token }, { withCredentials: true });
+      const res = await axios.post("https://glamgully.onrender.com/api/auth/google", { accessToken: tokenResponse.access_token }, { withCredentials: true });
       if (res.status === 200) {
         if (state?.pathname === '/user/login') {
           return navigate("/account", { replace: true })
