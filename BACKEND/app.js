@@ -50,7 +50,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // --- API Routes ---
-app.post("/api/auth", oauthRouter);
+app.use("/api/auth", oauthRouter);
 app.get("/api/test", (req, res) => res.send("Welcome To Backend Of GlamGully."));
 app.use("/api/admin", adminRouter);
 app.use("/api/product", productRouter);

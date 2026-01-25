@@ -48,6 +48,6 @@ export const onForegroundMessage = () => {
 export const setupNotifications = async () => {
   const token = await getOrRenewToken();
   if (token) {
-   await axios.post(`${import.meta.env.VITE_BASE_URL}/subscribe`, { token });
+   await axios.post(`https://glamgully.onrender.com/api/subscribe`, { token });
   }
 };

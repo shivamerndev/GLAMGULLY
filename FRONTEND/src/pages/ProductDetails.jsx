@@ -113,7 +113,7 @@ const ProductDetails = () => {
     // comment related functions
     const CommentCreate = async () => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/review/create`, {
+            await axios.post(`https://glamgully.onrender.com/api/review/create`, {
                 productId,
                 text: comment,
                 star: Starquantity // Assuming a default star rating of 3, you can modify this as needed

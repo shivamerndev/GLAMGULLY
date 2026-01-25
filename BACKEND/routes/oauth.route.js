@@ -1,9 +1,7 @@
 import express from "express";
-import { GoogleOAuth } from "../controllers/oauth.controller.js";
-import { googleAuthMiddleware } from "../middlewares/customers.auth.js";
+import { googleAuth } from "../controllers/oauth.controller.js";
 const router = express.Router();
 
-router.post("/google", GoogleOAuth);
-router.get("/profile",googleAuthMiddleware, GoogleOAuth);
+router.post("/google", googleAuth);
 
 export default router;  

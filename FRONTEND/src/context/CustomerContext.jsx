@@ -98,7 +98,7 @@ const CustomerContext = ({ children }) => {
         return (res.data)
     })
     const sendNotification = HandleError(async (data) => {
-        const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/send-notification`, data)
+        const res = await axios.post(`https://glamgully.onrender.com/api/send-notification`, data)
         return (res.data);
     })
     const getOrderHistory = HandleError(async () => {

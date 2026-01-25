@@ -12,7 +12,9 @@ const customerSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            required: true,
+            required: function () {
+                return !this.googleId;
+            },
             minlength: [10, "phone must be 10 digits."],
             maxlength: 10,
             unique: true
@@ -26,14 +28,21 @@ const customerSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: [true, "Password is required"],
+            required: [function () {
+                return !this.googleId;
+            }, "Password is required"],
             minlength: [8, "Password must be at least 6 characters long"],
             select: false, // default queries me password nahi aayega
+        },
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true, // null values ko ignore karega unique constraint me kyunki multiple users ke paas googleId nahi hoga but unique = true hai.
         },
         gender: {
             type: String,
             enum: ["male", "female", "other"],
-            required: true,
+            required: false,
         },
         wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "products", }],
         ordersHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: "orders" }],

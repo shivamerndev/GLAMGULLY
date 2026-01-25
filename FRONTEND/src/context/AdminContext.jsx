@@ -99,7 +99,7 @@ const AdminContext = ({ children }) => {
             const formData = new FormData();
             formData.append("reviewimg", file); // backend me req.file naam ka milega
 
-            const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/img/review/create`, formData, {
+            const res = await axios.post(`https://glamgully.onrender.com/api/img/review/create`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -112,7 +112,7 @@ const AdminContext = ({ children }) => {
     }
     const readReviewsImg = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/img/review/read`);
+            const res = await axios.get(`https://glamgully.onrender.com/api/img/review/read`);
             return (res.data);
         } catch (error) {
             console.log(error.message);

@@ -3,7 +3,7 @@ import axios from "axios";
 // handlePayment Function
 export const handlePayment = async (amount, CreateOrderFunction) => {
     try {
-        const orderres = await axios.post(`${import.meta.env.VITE_BASE_URL}/pay/order`, { amount: amount * 100 });
+        const orderres = await axios.post(`https://glamgully.onrender.com/api/pay/order`, { amount: amount * 100 });
         const data = orderres.data.order;
         handlePaymentVerify(data, CreateOrderFunction);
     } catch (error) {
@@ -13,7 +13,7 @@ export const handlePayment = async (amount, CreateOrderFunction) => {
 // verifyPayment Function
 const handlePaymentVerify = (data, CreateOrderFunction) => {
     const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Enter the Key ID generated from the Dashboard
+        key: "rzp_test_TdsyB6VuIxFT5s", // Enter the Key ID generated from the Dashboard
         amount: data.amount,
         currency: data.currency,
         name: "GlamGully",
@@ -21,7 +21,7 @@ const handlePaymentVerify = (data, CreateOrderFunction) => {
         order_id: data?.id,
         handler: async (response) => {
             try {
-                await axios.post(`${import.meta.env.VITE_BASE_URL}/pay/verify`, {
+                await axios.post(`https://glamgully.onrender.com/api/pay/verify`, {
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_signature: response.razorpay_signature,
